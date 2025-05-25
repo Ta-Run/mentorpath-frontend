@@ -1,43 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Container, Spinner, Table, Button, ProgressBar } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Legend, Cell
 } from 'recharts';
 
-const mergeIntervals = (intervals) => {
-  intervals.sort((a, b) => a.start - b.start);
-  const merged = [];
 
-  for (const interval of intervals) {
-    if (!merged.length || merged[merged.length - 1].end < interval.start) {
-      merged.push({ ...interval });
-    } else {
-      merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, interval.end);
-    }
-  }
 
-  return merged;
-};
-
-const getUnwatchedIntervals = (merged, duration) => {
-  const gaps = [];
-  let prevEnd = 0;
-
-  for (const interval of merged) {
-    if (interval.start > prevEnd) {
-      gaps.push({ start: prevEnd, end: interval.start });
-    }
-    prevEnd = interval.end;
-  }
-
-  if (prevEnd < duration) {
-    gaps.push({ start: prevEnd, end: duration });
-  }
-
-  return gaps;
-};
 
 const VideoProgressReport = () => {
   const { state } = useLocation();
@@ -60,27 +30,16 @@ const VideoProgressReport = () => {
 
         if (response.status === 200) {
           const data = response.data.data;
-          const merged = mergeIntervals(data.rawIntervals || []);
-          const gaps = getUnwatchedIntervals(merged, video.duration);
 
-          // Prepare data for chart
-          const chartData = [
-            ...merged.map((item, i) => ({
-              name: `Watched ${i + 1}`,
-              start: item.start,
-              duration: item.end - item.start,
-              type: 'watched',
-            })),
-            ...gaps.map((item, i) => ({
-              name: `Skipped ${i + 1}`,
-              start: item.start,
-              duration: item.end - item.start,
-              type: 'skipped',
-            }))
-          ];
+          const coloredGraph = (data.graph || []).map((chunk, index) => ({
+            name: chunk.time,
+            status: chunk.status,
+            duration: 5,
+            fill: chunk.status === 'watched' ? '#198754' : '#dc3545'
+          }));
 
           setProgressData(data);
-          setGraphData(chartData);
+          setGraphData(coloredGraph);
         } else {
           console.error('Failed to fetch progress report');
         }
@@ -93,6 +52,7 @@ const VideoProgressReport = () => {
 
     fetchProgress();
   }, [video, userId]);
+
 
   const handleCertificateCheck = () => {
     if (progressData?.isEligibleForCertificate) {
@@ -113,7 +73,8 @@ const VideoProgressReport = () => {
   }
 
   return (
-    <Container className="mt-4">
+    <Container className="mt-4 container-no-scroll" style={{ maxHeight: '100vh', overflowY: 'auto' }}>
+
       <h3>📊 Progress Report for: {video.title}</h3>
 
       {loading ? (
@@ -150,31 +111,36 @@ const VideoProgressReport = () => {
             </tbody>
           </Table>
 
-          <h5 className="mt-5">Visual Watch History</h5>
+
+          <h5 className="mt-5">🎬 Visual Watch History</h5>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={graphData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+
             >
+              <Legend verticalAlign="top" height={36} />
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis label={{ value: 'Duration (s)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip />
-              <Bar dataKey="duration" name="Watched Duration"
-                fill="#0d6efd"
-                isAnimationActive={false}
-              >
-                <LabelList dataKey="duration" position="top" />
-              </Bar>
-              <Bar
-                dataKey="duration"
-                data={graphData.filter(item => item.type === 'skipped')}
-                fill="red"
-                name="Skipped Duration"
-                isAnimationActive={false}
+              <YAxis
+                label={{ value: 'Duration (s)', angle: -90, position: 'insideLeft' }}
+                allowDecimals={false}
               />
+              <Tooltip
+                formatter={(value, name, props) => [`${value} seconds`, props.payload.status.toUpperCase()]}
+              />
+              <Bar dataKey="duration" name="Video Progress">
+                <LabelList dataKey="status" position="top" />
+                {
+                  graphData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))
+                }
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
+
+
 
           <div className="mt-4 text-center">
             <Button variant="success" onClick={handleCertificateCheck}>
