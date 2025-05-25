@@ -1,16 +1,19 @@
 import React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form as FormikForm, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { Button, Form as BootstrapForm, Container, Row, Col } from 'react-bootstrap';
+import {
+  Button,
+  Form as BootstrapForm,
+  Container,
+  Row,
+  Col,
+} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-
 const SignUpSchema = Yup.object().shape({
-  email: Yup.string()
-    .email('Invalid email address')
-    .required('Required'),
+  email: Yup.string().email('Invalid email address').required('Required'),
   username: Yup.string()
     .min(3, 'Too Short!')
     .max(15, 'Too Long!')
@@ -18,7 +21,6 @@ const SignUpSchema = Yup.object().shape({
   password: Yup.string()
     .min(6, 'Password too short - should be 6 chars minimum.')
     .required('Required'),
-
 });
 
 const SignUp = () => {
@@ -48,7 +50,7 @@ const SignUp = () => {
 
             const errorMessage =
               error.response?.data?.message ||
-              error.response?.data?.error || // handle { error: "..." } case
+              error.response?.data?.error ||
               'Signup failed!';
 
             toast.error(errorMessage);
@@ -56,24 +58,23 @@ const SignUp = () => {
             setSubmitting(false);
           }
         }}
-
       >
         {({ errors, touched, isSubmitting }) => (
-          <Form>
+          <FormikForm>
             {/* Email */}
             <BootstrapForm.Group className="mb-3" controlId="formEmail">
               <BootstrapForm.Label>Email address</BootstrapForm.Label>
               <Field
                 name="email"
+                as={BootstrapForm.Control}
                 type="email"
                 placeholder="Enter email"
-                className={`form - control ${errors.email && touched.email ? 'is-invalid' : ''
-                  }`}
+                isInvalid={touched.email && !!errors.email}
               />
               <ErrorMessage
-                component="div"
+                component={BootstrapForm.Control.Feedback}
                 name="email"
-                className="invalid-feedback"
+                type="invalid"
               />
             </BootstrapForm.Group>
 
@@ -82,15 +83,15 @@ const SignUp = () => {
               <BootstrapForm.Label>Username</BootstrapForm.Label>
               <Field
                 name="username"
+                as={BootstrapForm.Control}
                 type="text"
                 placeholder="Enter username"
-                className={`form - control ${errors.username && touched.username ? 'is-invalid' : ''
-                  }`}
+                isInvalid={touched.username && !!errors.username}
               />
               <ErrorMessage
-                component="div"
+                component={BootstrapForm.Control.Feedback}
                 name="username"
-                className="invalid-feedback"
+                type="invalid"
               />
             </BootstrapForm.Group>
 
@@ -99,19 +100,17 @@ const SignUp = () => {
               <BootstrapForm.Label>Password</BootstrapForm.Label>
               <Field
                 name="password"
+                as={BootstrapForm.Control}
                 type="password"
                 placeholder="Password"
-                className={`form - control ${errors.password && touched.password ? 'is-invalid' : ''
-                  }`}
+                isInvalid={touched.password && !!errors.password}
               />
               <ErrorMessage
-                component="div"
+                component={BootstrapForm.Control.Feedback}
                 name="password"
-                className="invalid-feedback"
+                type="invalid"
               />
             </BootstrapForm.Group>
-
-
 
             <Button variant="primary" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Sign Up'}
@@ -119,14 +118,11 @@ const SignUp = () => {
 
             <div className="mt-3 text-center">
               <p>Already have an account?</p>
-              <Button
-                variant="primary"
-                onClick={() => navigate('/')}
-              >
+              <Button variant="secondary" onClick={() => navigate('/')}>
                 Go to Sign In
               </Button>
             </div>
-          </Form>
+          </FormikForm>
         )}
       </Formik>
     </Container>

@@ -70,12 +70,19 @@ const VideoProgressReport = () => {
         <Button onClick={() => navigate('/videos')}>🔙 Go Back</Button>
       </Container>
     );
-  }
 
+  }
+  const isWatchTimeInvalid = progressData && progressData.lastWatchedAt > video.duration;
   return (
     <Container className="mt-4 container-no-scroll" style={{ maxHeight: '100vh', overflowY: 'auto' }}>
+      <div className='d-flex justify-content-between mb-5'>
 
-      <h3>📊 Progress Report for: {video.title}</h3>
+        <h3>📊 Progress Report for: {video.title}</h3>
+        <Button variant="secondary" className="" onClick={() => navigate('/videos')}>
+          Back to Videos
+        </Button>
+      </div>
+
 
       {loading ? (
         <div className="text-center mt-4">
@@ -90,7 +97,7 @@ const VideoProgressReport = () => {
             label={`${parseFloat(progressData.progress).toFixed(2)}%`}
             striped
             animated
-            variant="success"
+            variant={isWatchTimeInvalid ? "danger" : "success"}
             className="mb-4"
           />
 
@@ -112,14 +119,23 @@ const VideoProgressReport = () => {
           </Table>
 
 
+
           <h5 className="mt-5">🎬 Visual Watch History</h5>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart
               data={graphData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-
+              margin={{ top: 40, right: 30, left: 20, bottom: 5 }}
             >
-              <Legend verticalAlign="top" height={36} />
+              <defs>
+                <linearGradient id="watched" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#198754" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#198754" stopOpacity={0.2} />
+                </linearGradient>
+                <linearGradient id="unwatched" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#dc3545" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#dc3545" stopOpacity={0.2} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis
@@ -129,11 +145,15 @@ const VideoProgressReport = () => {
               <Tooltip
                 formatter={(value, name, props) => [`${value} seconds`, props.payload.status.toUpperCase()]}
               />
+              {/* <Legend verticalAlign="top" height={36} /> */}
               <Bar dataKey="duration" name="Video Progress">
                 <LabelList dataKey="status" position="top" />
                 {
                   graphData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`url(#${entry.status === 'watched' ? 'watched' : 'unwatched'})`}
+                    />
                   ))
                 }
               </Bar>
@@ -142,9 +162,14 @@ const VideoProgressReport = () => {
 
 
 
+
           <div className="mt-4 text-center">
-            <Button variant="success" onClick={handleCertificateCheck}>
-              🎓 Check Certificate Eligibility
+            <Button
+              variant={isWatchTimeInvalid ? "danger" : "success"}
+              onClick={handleCertificateCheck}
+              disabled={isWatchTimeInvalid}
+            >
+              🎓 Get Certificate
             </Button>
           </div>
         </>
@@ -152,9 +177,7 @@ const VideoProgressReport = () => {
         <p className="text-danger mt-4">No progress report found for this video.</p>
       )}
 
-      <Button variant="secondary" className="mt-4" onClick={() => navigate('/videos')}>
-        Back to Videos
-      </Button>
+
     </Container>
   );
 };
