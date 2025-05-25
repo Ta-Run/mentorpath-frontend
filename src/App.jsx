@@ -2,7 +2,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from './components/Login';
 import SignUp from './components/SignUp';
-import VideoData from './components/VideoData'
+import Videos from './components/Videos'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import VideoPlayer from './components/VideoPlayer';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,9 +16,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/videodata" element={<VideoData />} />
+          <Route path="/videos" element={<Videos />} />
           <Route path="/play/:id" element={<VideoPlayer />} />
-          <Route path="/progress-report" element={<VideoProgressReport />} />
+          <Route path="/progressreport" element={<VideoProgressReport />} />
         </Routes>
       </Router>
 

@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Spinner, Button } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const VideoData = () => {
+const Videos = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -68,4 +68,4 @@ const VideoData = () => {
   );
 };
 
-export default VideoData;
+export default Videos;

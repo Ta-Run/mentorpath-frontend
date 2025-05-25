@@ -5,6 +5,7 @@ import { Button, Form as BootstrapForm, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { jwtDecode } from 'jwt-decode';
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -34,8 +35,11 @@ const Login = () => {
               }
             );
 
-            const { token } = response.data;
-            localStorage.setItem('token', token);
+            const { token } = response.data.data;
+            const decoded = jwtDecode(token);
+            const userId = decoded.userId || decoded.id || decoded._id;
+            localStorage.setItem('userId', userId);
+            // localStorage.setItem('token', token);
 
             toast.success('Login successful!');
             console.log('✅ Login response:', response.data);
