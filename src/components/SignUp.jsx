@@ -2,7 +2,10 @@ import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Button, Form as BootstrapForm, Container, Row, Col } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+
 
 const SignUpSchema = Yup.object().shape({
   email: Yup.string()
@@ -15,26 +18,45 @@ const SignUpSchema = Yup.object().shape({
   password: Yup.string()
     .min(6, 'Password too short - should be 6 chars minimum.')
     .required('Required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Required'),
+
 });
 
 const SignUp = () => {
-        const navigate = useNavigate();
-  
+  const navigate = useNavigate();
+
   return (
     <Container>
       <h2 className="mb-4">Sign Up</h2>
       <Formik
-        initialValues={{ email: '', username: '', password: '', confirmPassword: '' }}
+        initialValues={{ email: '', username: '', password: '' }}
         validationSchema={SignUpSchema}
-        onSubmit={(values, { setSubmitting, resetForm }) => {
-          console.log('Form data:', values);
-          alert('Sign up successful!');
-          setSubmitting(false);
-          resetForm();
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
+          try {
+            const response = await axios.post(
+              `${import.meta.env.VITE_API_BASE_URL}/user/signup`,
+              {
+                name: values.username,
+                email: values.email,
+                password: values.password,
+              }
+            );
+            toast.success('Sign up successful!');
+            resetForm();
+            navigate('/');
+          } catch (error) {
+            console.error('Signup error:', error.response?.data || error.message);
+
+            const errorMessage =
+              error.response?.data?.message ||
+              error.response?.data?.error || // handle { error: "..." } case
+              'Signup failed!';
+
+            toast.error(errorMessage);
+          } finally {
+            setSubmitting(false);
+          }
         }}
+
       >
         {({ errors, touched, isSubmitting }) => (
           <Form>
@@ -45,9 +67,8 @@ const SignUp = () => {
                 name="email"
                 type="email"
                 placeholder="Enter email"
-                className={`form-control ${
-                  errors.email && touched.email ? 'is-invalid' : ''
-                }`}
+                className={`form - control ${errors.email && touched.email ? 'is-invalid' : ''
+                  }`}
               />
               <ErrorMessage
                 component="div"
@@ -63,9 +84,8 @@ const SignUp = () => {
                 name="username"
                 type="text"
                 placeholder="Enter username"
-                className={`form-control ${
-                  errors.username && touched.username ? 'is-invalid' : ''
-                }`}
+                className={`form - control ${errors.username && touched.username ? 'is-invalid' : ''
+                  }`}
               />
               <ErrorMessage
                 component="div"
@@ -81,9 +101,8 @@ const SignUp = () => {
                 name="password"
                 type="password"
                 placeholder="Password"
-                className={`form-control ${
-                  errors.password && touched.password ? 'is-invalid' : ''
-                }`}
+                className={`form - control ${errors.password && touched.password ? 'is-invalid' : ''
+                  }`}
               />
               <ErrorMessage
                 component="div"
@@ -92,37 +111,21 @@ const SignUp = () => {
               />
             </BootstrapForm.Group>
 
-            {/* Confirm Password */}
-            <BootstrapForm.Group className="mb-3" controlId="formConfirmPassword">
-              <BootstrapForm.Label>Confirm Password</BootstrapForm.Label>
-              <Field
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm Password"
-                className={`form-control ${
-                  errors.confirmPassword && touched.confirmPassword ? 'is-invalid' : ''
-                }`}
-              />
-              <ErrorMessage
-                component="div"
-                name="confirmPassword"
-                className="invalid-feedback"
-              />
-            </BootstrapForm.Group>
+
 
             <Button variant="primary" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Sign Up'}
             </Button>
 
-              <div className="mt-3 text-center">
-                          <p>Already have an account?</p>
-                          <Button
-                            variant="primary"
-                            onClick={() => navigate('/')}
-                          >
-                            Go to Sign In
-                          </Button>
-                        </div>
+            <div className="mt-3 text-center">
+              <p>Already have an account?</p>
+              <Button
+                variant="primary"
+                onClick={() => navigate('/')}
+              >
+                Go to Sign In
+              </Button>
+            </div>
           </Form>
         )}
       </Formik>

@@ -2,7 +2,9 @@ import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Button, Form as BootstrapForm, Container } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -14,7 +16,7 @@ const LoginSchema = Yup.object().shape({
 });
 
 const Login = () => {
-      const navigate = useNavigate();
+  const navigate = useNavigate();
 
   return (
     <Container>
@@ -22,11 +24,34 @@ const Login = () => {
       <Formik
         initialValues={{ email: '', password: '' }}
         validationSchema={LoginSchema}
-        onSubmit={(values, { setSubmitting, resetForm }) => {
-          console.log('Login data:', values);
-          alert('Login successful!');
-          setSubmitting(false);
-          resetForm();
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
+          try {
+            const response = await axios.post(
+              `${import.meta.env.VITE_API_BASE_URL}/user/login`,
+              {
+                email: values.email,
+                password: values.password,
+              }
+            );
+
+            const { token } = response.data;
+            localStorage.setItem('token', token);
+
+            toast.success('Login successful!');
+            console.log('✅ Login response:', response.data);
+
+            resetForm();
+            navigate('/videos');
+          } catch (error) {
+            console.error('Login error:', error.response?.data || error.message);
+            const errorMessage =
+              error.response?.data?.message ||
+              error.response?.data?.error ||
+              'Login failed!';
+            toast.error(errorMessage);
+          } finally {
+            setSubmitting(false);
+          }
         }}
       >
         {({ errors, touched, isSubmitting }) => (
@@ -38,9 +63,8 @@ const Login = () => {
                 name="email"
                 type="email"
                 placeholder="Enter email"
-                className={`form-control ${
-                  errors.email && touched.email ? 'is-invalid' : ''
-                }`}
+                className={`form-control ${errors.email && touched.email ? 'is-invalid' : ''
+                  }`}
               />
               <ErrorMessage
                 component="div"
@@ -56,9 +80,8 @@ const Login = () => {
                 name="password"
                 type="password"
                 placeholder="Password"
-                className={`form-control ${
-                  errors.password && touched.password ? 'is-invalid' : ''
-                }`}
+                className={`form-control ${errors.password && touched.password ? 'is-invalid' : ''
+                  }`}
               />
               <ErrorMessage
                 component="div"
@@ -71,7 +94,7 @@ const Login = () => {
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
 
-             <div className="mt-3 text-center">
+            <div className="mt-3 text-center">
               <p>Don't have an account?</p>
               <Button
                 variant="primary"
@@ -83,7 +106,6 @@ const Login = () => {
           </Form>
         )}
       </Formik>
-      
     </Container>
   );
 };
